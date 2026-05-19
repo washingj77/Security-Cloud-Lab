@@ -19,11 +19,27 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Start LocalStack
-        uses: LocalStack/setup-localstack@main
-        with:
-          image-tag: latest
-          install-awslocal: true
+      - name: Start LocalStack with Docker
+        run: |
+          docker run -d \
+            --name localstack \
+            -p 4566:4566 \
+            -e SERVICES=ec2,s3,iam,sts \
+            -e DEBUG=1 \
+            localstack/localstack:latest
+
+      - name: Wait for LocalStack
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:4566/_localstack/health; then
+              echo "LocalStack is ready"
+              exit 0
+            fi
+            echo "Waiting for LocalStack..."
+            sleep 3
+          done
+          docker logs localstack
+          exit 1
 
       - name: Terraform Init
         working-directory: terraform
@@ -35,4 +51,4 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform
-        run: terraform apply -auto-approve -var="localstack_endpoint=http://localhost.localstack.cloud:4566"
+        run: terraform apply -auto-approve
