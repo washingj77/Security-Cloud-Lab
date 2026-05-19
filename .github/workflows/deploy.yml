@@ -1,0 +1,35 @@
+name: SecurityPlus LocalStack CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform-localstack:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Start LocalStack
+        uses: LocalStack/setup-localstack@main
+        with:
+          image-tag: latest
+          install-awslocal: true
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -auto-approve -var="localstack_endpoint=http://localhost.localstack.cloud:4566"
