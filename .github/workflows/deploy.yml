@@ -26,7 +26,7 @@ jobs:
             -p 4566:4566 \
             -e SERVICES=ec2,s3,iam,sts \
             -e DEBUG=1 \
-            localstack/localstack:latest
+            localstack/localstack:3.8.1
 
       - name: Wait for LocalStack
         run: |
